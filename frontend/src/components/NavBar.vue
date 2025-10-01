@@ -22,36 +22,24 @@
   </nav>
 </template>
 
-<script>
-import { useAuthStore } from '@/stores/auth';
+<script setup>
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
-export default {
-  name: 'NavBar',
-  data() {
-    return {
-      isMenuOpen: false
-    };
-  },
-  computed: {
-    isLoggedIn() {
-      const userStore = useAuthStore();
-      return userStore.isLoggedIn;
-    },
-    getUserName() {
-      const userStore = useAuthStore();
-      return userStore.getUserName;
-    }
-  },
-  methods: {
-    logout() {
-      const userStore = useAuthStore();
-      userStore.logout();
-    },
-    toggleMenu() {
-      this.isMenuOpen = !this.isMenuOpen;
-    }
-  }
-};
+const isMenuOpen = ref(false)
+
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value
+}
+
+const authStore = useAuthStore()
+
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+const getUserName = computed(() => authStore.getUserName)
+
+const logout = () => {
+  authStore.logout()
+}
 </script>
 
 <style scoped>
