@@ -11,14 +11,14 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, FastAPI
 import os
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
 from passlib.context import CryptContext
-
+from jose import jwt
+from jose.exceptions import JWTError
 from pydantic import BaseModel, Field, AnyHttpUrl
 from sqlalchemy import (Column, ForeignKey, Integer, String, Table, Text,
                         create_engine)
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
