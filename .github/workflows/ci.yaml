@@ -20,16 +20,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Fix macOS runner permissions
-        run: |
-          sudo chown -R $(whoami) /Users/runner
-          mkdir -p /Users/runner/.cache/pip
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
-          cache: 'pip'
+        env:
+          RUNNER_TOOL_CACHE: /tmp/actions-runner-tool-cache
 
       - name: Install dependencies
         run: |
