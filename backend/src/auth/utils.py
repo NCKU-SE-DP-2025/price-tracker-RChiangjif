@@ -5,7 +5,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 # 從 src/config.py 引入配置
-from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # --- Password Utilities ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

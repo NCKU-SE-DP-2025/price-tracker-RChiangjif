@@ -9,7 +9,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 DATABASE_URL = "sqlite:///news_database.db"
 
 # --- External Service Config ---
-SENTRY_DSN = "..." # Your Sentry DSN
+SENTRY_DSN = None  # Set to None if not configured, or provide valid DSN
 OPENAI_API_KEY = "xxx"
 SCHEDULER_INTERVAL_MINUTES = 100
 

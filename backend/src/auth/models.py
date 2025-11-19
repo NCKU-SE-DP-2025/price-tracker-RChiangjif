@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
 # 從 src/database.py 引入 Base
-from ..database import Base 
+from src.database import Base 
 
 class User(Base):
     __tablename__ = "users"
