@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Optional
-import hashlib
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -9,23 +8,19 @@ from passlib.context import CryptContext
 from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # --- Password Utilities ---
+# 使用 argon2 而不是 bcrypt，以避免 bcrypt 的 72 字節限制和初始化問題
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=12
+    schemes=["argon2"],
+    deprecated="auto"
 )
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """驗證密碼是否匹配雜湊值。"""
-    # 先用 SHA-256 預處理密碼以確保長度不超過 72 字節
-    processed_password = hashlib.sha256(plain_password.encode()).hexdigest()
-    return pwd_context.verify(processed_password, hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     """對密碼進行雜湊處理。"""
-    # 先用 SHA-256 預處理密碼以確保長度不超過 72 字節
-    processed_password = hashlib.sha256(password.encode()).hexdigest()
-    return pwd_context.hash(processed_password)
+    return pwd_context.hash(password)
 
 # --- JWT Utilities ---
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
