@@ -2,9 +2,9 @@ from typing import Union
 
 from sqlalchemy.orm import Session
 
-from .models import User
-from .schemas import UserAuthSchema
-from .utils import get_password_hash, verify_password
+from src.auth.models import User
+from src.auth.schemas import UserAuthSchema
+from src.auth.utils import get_password_hash, verify_password
 
 class UserService:
     @staticmethod

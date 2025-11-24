@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from .schemas import UserAuthSchema, Token
-from .service import UserService
-from .utils import create_access_token
+from src.auth.models import User
+from src.auth.schemas import UserAuthSchema, Token, UserResponse
+from src.auth.service import UserService
+from src.auth.utils import create_access_token
 # 引入 dependencies 檔案中的依賴函數
-from .dependencies import get_current_user 
-from ..database import get_db
+from src.auth.dependencies import get_current_user 
+from src.database import get_db
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -36,13 +37,13 @@ async def login_for_access_token(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/register", response_model=UserAuthSchema)
+@router.post("/register", response_model=UserResponse)
 def create_user(user: UserAuthSchema, db: Session = Depends(get_db)):
     """
     新用戶註冊。
     """
     # 檢查用戶是否已存在 (這是註冊的基本檢查，應該在 service 層實現，這裡簡化)
-    if db.query(UserService.User).filter_by(username=user.username).first():
+    if db.query(User).filter_by(username=user.username).first():
         raise HTTPException(status_code=400, detail="Username already registered")
         
     return UserService.create_user(db, user)

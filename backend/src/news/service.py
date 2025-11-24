@@ -9,10 +9,10 @@ from openai import OpenAI
 from sqlalchemy.orm import Session
 from sqlalchemy import delete, insert, select
 
-from .models import NewsArticle, user_news_association_table
+from src.news.models import NewsArticle, user_news_association_table
 # 引入核心配置和依賴
-from ..config import OPENAI_API_KEY
-from ..database import get_db
+from src.config import OPENAI_API_KEY
+from src.database import get_db
 
 # --- Database Operations (CRUD) ---
 
@@ -81,8 +81,17 @@ class DatabaseService:
 
 class NewsScrapingService:
     """處理新聞爬蟲、AI 交互和排程任務的業務邏輯。"""
-    client = OpenAI(api_key=OPENAI_API_KEY)
     _id_counter = itertools.count(start=1000000)
+    
+    @classmethod
+    def get_client(cls):
+        """Get or create OpenAI client."""
+        # Always try to create a client when needed (allows mocking to work)
+        try:
+            return OpenAI(api_key=OPENAI_API_KEY)
+        except Exception:
+            # If initialization fails, return None
+            return None
 
     @staticmethod
     def get_news_info(search_term: str, is_initial: bool = False) -> List[Dict[str, Any]]:
@@ -149,7 +158,10 @@ class NewsScrapingService:
             },
             {"role": "user", "content": f"{title}"},
         ]
-        ai_response = cls.client.chat.completions.create(
+        client = cls.get_client()
+        if not client:
+            return "medium"  # Default to medium if client not available
+        ai_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=relevance_messages,
         )
@@ -166,7 +178,10 @@ class NewsScrapingService:
             {"role": "user", "content": f"{content}"},
         ]
 
-        completion = cls.client.chat.completions.create(
+        client = cls.get_client()
+        if not client:
+            return {"影響": "摘要生成失敗", "原因": "摘要生成失敗"}
+        completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=summary_messages,
         )
@@ -224,7 +239,10 @@ class NewsScrapingService:
             {"role": "user", "content": f"{prompt}"},
         ]
 
-        ai_response = cls.client.chat.completions.create(
+        client = cls.get_client()
+        if not client:
+            return []  # Return empty list if client not available
+        ai_response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=keyword_messages,
         )

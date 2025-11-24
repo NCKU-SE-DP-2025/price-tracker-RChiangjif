@@ -7,6 +7,15 @@ class UserAuthSchema(BaseModel):
     username: str
     password: str
 
+class UserResponse(BaseModel):
+    """
+    用於返回用戶資訊的響應模型。
+    """
+    username: str
+    
+    class Config:
+        from_attributes = True
+
 class Token(BaseModel):
     """
     用於登入成功後返回 JWT Token 的響應模型。

@@ -5,10 +5,14 @@ from jose import jwt
 from passlib.context import CryptContext
 
 # 從 src/config.py 引入配置
-from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 # --- Password Utilities ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 使用 argon2 而不是 bcrypt，以避免 bcrypt 的 72 字節限制和初始化問題
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto"
+)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """驗證密碼是否匹配雜湊值。"""

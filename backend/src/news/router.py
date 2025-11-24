@@ -2,14 +2,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from .models import NewsArticle
-from .schemas import PromptRequest, NewsSumaryRequestSchema, NewsBase
-from .service import DatabaseService, NewsScrapingService
+from src.news.models import NewsArticle
+from src.news.schemas import PromptRequest, NewsSumaryRequestSchema, NewsBase
+from src.news.service import DatabaseService, NewsScrapingService
 # 引入核心依賴
-from ..database import get_db
+from src.database import get_db
 # 引入 auth 模組的依賴和模型 (處理授權)
-from ..auth.dependencies import get_current_user
-from ..auth.models import User 
+from src.auth.dependencies import get_current_user
+from src.auth.models import User 
 
 router = APIRouter(prefix="/api/v1/news", tags=["news"])
 

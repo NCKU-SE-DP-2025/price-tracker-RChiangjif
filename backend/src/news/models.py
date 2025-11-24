@@ -2,7 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import relationship
 
 # 引入核心數據庫配置
-from ..database import Base
+from src.database import Base
 
 # --- 關聯表：用戶點讚新聞 ---
 user_news_association_table = Table(
