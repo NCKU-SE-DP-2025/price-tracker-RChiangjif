@@ -30,16 +30,13 @@ class News(Headline):
         example="Content of the article",
         description="The content of the article"
     )
-
-
-class NewsWithSummary(News):
-    summary: str = Field(
-        default=...,
+    summary: str | None = Field(
+        default=None,
         example="Summary of the article",
         description="The summary of the article"
     )
-    reason: str = Field(
-        default=...,
+    reason: str | None = Field(
+        default=None,
         example="Reason of the article",
         description="The reason of the article"
     )
@@ -48,6 +45,9 @@ class NewsWithSummary(News):
 class NewsCrawlerBase(metaclass=abc.ABCMeta):
     news_website_url: AnyHttpUrl | str
     news_website_news_child_urls: list[AnyHttpUrl | str]
+
+    def __init__(self):
+        pass
 
     @abc.abstractmethod
     def get_headline(
@@ -105,9 +105,8 @@ class NewsCrawlerBase(metaclass=abc.ABCMeta):
         return self.parse(url)
 
 
-    @staticmethod
     @abc.abstractmethod
-    def save(news: News, db: Session | None):
+    def save(self, news: News, db: Session):
         """
         Save the news content to a persistent storage.
 

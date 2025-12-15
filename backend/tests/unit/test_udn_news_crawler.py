@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from requests.models import Response
 from sqlalchemy.orm import Session
 from src.crawler.udn_crawler import UDNCrawler
-from src.crawler.crawler_base import NewsWithSummary
+from src.crawler.crawler_base import News
 from src.crawler.exceptions import DomainMismatchException
 
 
@@ -12,7 +12,7 @@ class TestUDNCrawler(unittest.TestCase):
     def setUp(self):
         self.scraper = UDNCrawler(timeout=5)
 
-    @patch("src.crawler.udn_crawler.requests.get")
+    @patch("src.crawler.udn_crawler.requests.Session.get")
     def test_perform_request_success(self, mock_get):
         mock_response = MagicMock(spec=Response)
         mock_response.status_code = 200
@@ -22,7 +22,7 @@ class TestUDNCrawler(unittest.TestCase):
         self.assertEqual(response, mock_response)
         mock_get.assert_called_once()
 
-    @patch("src.crawler.udn_crawler.requests.get")
+    @patch("src.crawler.udn_crawler.requests.Session.get")
     def test_perform_request_failure(self, mock_get):
         import requests
         mock_get.side_effect = requests.RequestException("Network Error")
@@ -30,7 +30,7 @@ class TestUDNCrawler(unittest.TestCase):
         # The method catches RequestException and returns an empty Response
         self.assertIsNotNone(response)
 
-    @patch("src.crawler.udn_crawler.requests.get")
+    @patch("src.crawler.udn_crawler.requests.Session.get")
     def test_fetch_news_data(self, mock_get):
         mock_response = MagicMock(spec=Response)
         mock_response.status_code = 200
@@ -44,7 +44,7 @@ class TestUDNCrawler(unittest.TestCase):
         self.assertEqual(headlines[0].title, "Test News")
         self.assertEqual(headlines[0].url, "https://udn.com/news/test-news")
 
-    @patch("src.crawler.udn_crawler.requests.get")
+    @patch("src.crawler.udn_crawler.requests.Session.get")
     def test_parse_news(self, mock_get):
         mock_response = MagicMock(spec=Response)
         mock_response.status_code = 200
@@ -76,7 +76,7 @@ class TestUDNCrawler(unittest.TestCase):
         mock_db = MagicMock(spec=Session)
         mock_db.query.return_value.filter_by.return_value.first.return_value = None
 
-        news = NewsWithSummary(
+        news = News(
             title="Test Title",
             url="https://udn.com/news/test-news",
             time="2023-09-08T00:00:00",

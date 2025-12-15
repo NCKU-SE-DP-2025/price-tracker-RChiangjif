@@ -34,21 +34,37 @@ UDNCrawler Methods:
 
 from typing import Optional
 from urllib.parse import quote
+import logging
 import requests
 from requests import Response
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
-from .crawler_base import NewsCrawlerBase, Headline, News, NewsWithSummary
+from .crawler_base import NewsCrawlerBase, Headline, News
 from src.news.models import NewsArticle
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 
 class UDNCrawler(NewsCrawlerBase):
     CHANNEL_ID = 2
 
     def __init__(self, timeout: int = 5) -> None:
+        super().__init__()
         self.news_website_url = "https://udn.com/api/more"
         self.timeout = timeout
+        self.session = requests.Session()
+        # Set headers to mimic a browser to avoid being blocked
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        })
 
     def startup(self, search_term: str) -> list[Headline]:
         """
@@ -127,11 +143,11 @@ class UDNCrawler(NewsCrawlerBase):
         """
         request_url = url or self.news_website_url
         try:
-            response = requests.get(request_url, params=params, timeout=self.timeout)
+            response = self.session.get(request_url, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response
         except requests.RequestException as e:
-            print(f"Error performing request: {e}")
+            logger.error(f"Error performing request to {request_url}: {e}")
             return Response()
 
     @staticmethod
@@ -155,10 +171,10 @@ class UDNCrawler(NewsCrawlerBase):
             
             return headlines
         except Exception as e:
-            print(f"Error parsing headlines: {e}")
+            logger.error(f"Error parsing headlines: {e}")
             return []
 
-    def parse(self, url: str) -> News:
+    def parse(self, url: str) -> News | None:
         """
         Parses a news article from a given URL.
 
@@ -166,17 +182,17 @@ class UDNCrawler(NewsCrawlerBase):
         :return: A News object containing the title, URL, time, and content of the news article.
         """
         try:
-            response = requests.get(url, timeout=self.timeout)
+            response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
             
             return self._extract_news(soup, url)
         except Exception as e:
-            print(f"Error parsing URL {url}: {e}")
+            logger.error(f"Error parsing URL {url}: {e}")
             return None
 
     @staticmethod
-    def _extract_news(soup: BeautifulSoup, url: str) -> News:
+    def _extract_news(soup: BeautifulSoup, url: str) -> News | None:
         """
         Extracts news details from the BeautifulSoup object.
 
@@ -210,14 +226,14 @@ class UDNCrawler(NewsCrawlerBase):
                 content=content,
             )
         except Exception as e:
-            print(f"Error extracting news from soup: {e}")
+            logger.error(f"Error extracting news from soup: {e}")
             return None
 
-    def save(self, news: NewsWithSummary, db: Session):
+    def save(self, news: News, db: Session):
         """
         Saves a news article to the database.
 
-        :param news: A NewsWithSummary object containing the news details including summary and reason.
+        :param news: A News object containing the news details including summary and reason.
         :param db: An instance of the database session to use for saving the news.
         """
         try:
@@ -225,23 +241,24 @@ class UDNCrawler(NewsCrawlerBase):
             existing_article = db.query(NewsArticle).filter_by(url=str(news.url)).first()
             
             if existing_article:
-                print(f"News article already exists: {news.url}")
+                logger.info(f"News article already exists: {news.url}")
                 return
             
             # Create a new NewsArticle object
+            # Ensure summary and reason are strings, defaulting to empty string if None
             news_article = NewsArticle(
                 url=str(news.url),
                 title=news.title,
                 time=news.time,
                 content=news.content,
-                summary=news.summary,
-                reason=news.reason,
+                summary=news.summary or "",
+                reason=news.reason or "",
             )
             
             db.add(news_article)
             self._commit_changes(db)
         except Exception as e:
-            print(f"Error saving news: {e}")
+            logger.error(f"Error saving news: {e}")
             db.rollback()
 
     @staticmethod
@@ -255,5 +272,5 @@ class UDNCrawler(NewsCrawlerBase):
             db.commit()
         except Exception as e:
             db.rollback()
-            print(f"Error committing changes to database: {e}")
+            logger.error(f"Error committing changes to database: {e}")
             raise

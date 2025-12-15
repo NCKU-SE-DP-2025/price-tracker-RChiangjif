@@ -20,8 +20,7 @@ class MockNewsCrawler(NewsCrawlerBase):
             content="This is the content of the article."
         )
 
-    @staticmethod
-    def save(news: News, db=None):
+    def save(self, news: News, db=None):
         return True
 
 
